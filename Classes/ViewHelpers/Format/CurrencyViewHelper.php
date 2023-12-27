@@ -84,13 +84,13 @@ class CurrencyViewHelper extends AbstractViewHelper
      */
     public function render()
     {
-        $currencySign = $this->arguments['currencySign'];
-        $decimalSeparator = $this->arguments['decimalSeparator'];
-        $thousandsSeparator = $this->arguments['thousandsSeparator'];
-        $prependCurrency = $this->arguments['prependCurrency'];
-        $separateCurrency = $this->arguments['separateCurrency'];
-        $decimals = $this->arguments['decimals'];
-        $currencyTranslation = $this->arguments['currencyTranslation'];
+        $currencySign = $this->arguments['currencySign'] ?? '';
+        $decimalSeparator = $this->arguments['decimalSeparator'] ?? '';
+        $thousandsSeparator = $this->arguments['thousandsSeparator'] ?? '';
+        $prependCurrency = $this->arguments['prependCurrency'] ?? '';
+        $separateCurrency = $this->arguments['separateCurrency'] ?? '';
+        $decimals = $this->arguments['decimals'] ?? '';
+        $currencyTranslation = $this->arguments['currencyTranslation'] ?? '';
 
         $settings = $this->templateVariableContainer->get('settings');
 

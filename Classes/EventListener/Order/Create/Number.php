@@ -66,9 +66,9 @@ abstract class Number
         $numberInRegistryWithOffset = $numberInRegistry + (int)($this->options['offset'] ?? 0);
 
         return implode([
-            $this->options['prefix'] ?? null,
+            ($this->options['prefix'] ?? ''),
             sprintf($format, $numberInRegistryWithOffset),
-            $this->options['suffix'] ?? null,
+            ($this->options['suffix'] ?? ''),
         ]);
     }
 }

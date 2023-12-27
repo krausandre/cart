@@ -8,7 +8,7 @@ namespace Extcode\Cart\Controller\Cart;
  * For the full copyright and license information, please read the
  * LICENSE file that was distributed with this source code.
  */
-
+use Psr\Http\Message\ResponseInterface;
 use Extcode\Cart\Domain\Model\Order\BillingAddress;
 use Extcode\Cart\Domain\Model\Order\Item;
 use Extcode\Cart\Domain\Model\Order\ShippingAddress;
@@ -28,7 +28,7 @@ class CartController extends ActionController
             return;
         }
 
-        $steps = (int)($this->settings['cart']['steps'] ?? 0);
+        $steps = (int)$this->settings['cart']['steps'];
         if ($steps > 1) {
             if ($this->request->hasArgument('step')) {
                 $currentStep = (int)$this->request->getArgument('step') ?: 1;
@@ -59,11 +59,11 @@ class CartController extends ActionController
         Item $orderItem = null,
         BillingAddress $billingAddress = null,
         ShippingAddress $shippingAddress = null
-    ): void {
+    ): ResponseInterface {
         $this->restoreSession();
         if (is_null($billingAddress)) {
             $sessionData = $GLOBALS['TSFE']->fe_user->getKey('ses', 'cart_billing_address_' . $this->settings['cart']['pid']);
-            $billingAddress = unserialize($sessionData);
+            $billingAddress = ($sessionData === null) ? null : unserialize($sessionData);
         } else {
             $sessionData = serialize($billingAddress);
             $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_billing_address_' . $this->settings['cart']['pid'], $sessionData);
@@ -71,7 +71,7 @@ class CartController extends ActionController
         }
         if (is_null($shippingAddress)) {
             $sessionData = $GLOBALS['TSFE']->fe_user->getKey('ses', 'cart_shipping_address_' . $this->settings['cart']['pid']);
-            $shippingAddress = unserialize($sessionData);
+            $shippingAddress = ($sessionData === null) ? null : unserialize($sessionData);
         } else {
             $sessionData = serialize($shippingAddress);
             $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_shipping_address_' . $this->settings['cart']['pid'], $sessionData);
@@ -145,6 +145,7 @@ class CartController extends ActionController
             'shippingAddress' => $shippingAddress
         ];
         $this->view->assignMultiple($assignArguments);
+        return $this->htmlResponse();
     }
 
     public function clearAction(): void

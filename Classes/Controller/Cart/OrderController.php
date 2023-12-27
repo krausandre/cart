@@ -8,6 +8,7 @@ namespace Extcode\Cart\Controller\Cart;
  * For the full copyright and license information, please read the
  * LICENSE file that was distributed with this source code.
  */
+use Psr\Http\Message\ResponseInterface;
 use Extcode\Cart\Domain\Model\Order\BillingAddress;
 use Extcode\Cart\Domain\Model\Order\Item;
 use Extcode\Cart\Domain\Model\Order\ShippingAddress;
@@ -60,7 +61,11 @@ class OrderController extends ActionController
             if (!$this->arguments->hasArgument($argumentName)) {
                 continue;
             }
-            if (isset($this->settings['validation'][$argumentName]['fields'])) {
+            if (isset($this->settings['validation']) &&
+                isset($this->settings['validation'][$argumentName]) &&
+                isset($this->settings['validation'][$argumentName]['fields']) &&
+                is_iterable(($this->settings['validation'][$argumentName]['fields']))
+            ) {
                 $fields = $this->settings['validation'][$argumentName]['fields'];
 
                 foreach ($fields as $propertyName => $validatorConf) {
@@ -69,7 +74,7 @@ class OrderController extends ActionController
                         $propertyName,
                         [
                             'validator' => $validatorConf['validator'],
-                            'options' => is_array($validatorConf['options'] ?? null)
+                            'options' => (isset($validatorConf['options']) && is_array($validatorConf['options']))
                                 ? $validatorConf['options']
                                 : []
                         ]
@@ -111,7 +116,7 @@ class OrderController extends ActionController
     ) {
         if (is_null($billingAddress)) {
             $sessionData = $GLOBALS['TSFE']->fe_user->getKey('ses', 'cart_billing_address_' . $this->settings['cart']['pid']);
-            $billingAddress = unserialize($sessionData);
+            $billingAddress = ($sessionData === null) ? null : unserialize($sessionData);
         } else {
             $sessionData = serialize($billingAddress);
             $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_billing_address_' . $this->settings['cart']['pid'], $sessionData);
@@ -119,7 +124,7 @@ class OrderController extends ActionController
         }
         if (is_null($shippingAddress)) {
             $sessionData = $GLOBALS['TSFE']->fe_user->getKey('ses', 'cart_shipping_address_' . $this->settings['cart']['pid']);
-            $shippingAddress = unserialize($sessionData);
+            $shippingAddress = ($sessionData === null) ? null : unserialize($sessionData);
         } else {
             $sessionData = serialize($shippingAddress);
             $GLOBALS['TSFE']->fe_user->setKey('ses', 'cart_shipping_address_' . $this->settings['cart']['pid'], $sessionData);
@@ -171,7 +176,11 @@ class OrderController extends ActionController
         $paymentId = $this->cart->getPayment()->getId();
         $paymentSettings = $this->parserUtility->getTypePluginSettings($this->pluginSettings, $this->cart, 'payments');
 
-        if (isset($paymentSettings['options'][$paymentId]['redirects']['success']['url'])) {
+        if (isset($paymentSettings['options'][$paymentId]) &&
+            isset($paymentSettings['options'][$paymentId]['redirects']) &&
+            isset($paymentSettings['options'][$paymentId]['redirects']['success']) &&
+            isset($paymentSettings['options'][$paymentId]['redirects']['success']['url'])
+        ) {
             $this->redirectToUri($paymentSettings['options'][$paymentId]['redirects']['success']['url'], 0, 200);
         }
     }
@@ -179,9 +188,10 @@ class OrderController extends ActionController
     /**
      * @param Item $orderItem
      */
-    public function showAction(Item $orderItem)
+    public function showAction(Item $orderItem): ResponseInterface
     {
         $this->view->assign('orderItem', $orderItem);
+        return $this->htmlResponse();
     }
 
     /**

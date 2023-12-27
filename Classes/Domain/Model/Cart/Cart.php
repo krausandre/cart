@@ -459,14 +459,18 @@ class Cart
         if ($this->payment) {
             $paymentTaxes = $this->payment->getTaxes();
             foreach ($paymentTaxes as $paymentTax) {
-                $taxes[$paymentTax['taxClassId']] = $taxes[$paymentTax['taxClassId']] ?? 0; // ensure, $taxes[<int>] exists
+                if (!isset($taxes[$paymentTax['taxClassId']])) {
+                    $taxes[$paymentTax['taxClassId']] = 0;
+                }
                 $taxes[$paymentTax['taxClassId']] += $paymentTax['tax'];
             }
         }
         if ($this->shipping) {
             $shippingTaxes = $this->shipping->getTaxes();
             foreach ($shippingTaxes as $shippingTax) {
-                $taxes[$shippingTax['taxClassId']] = $taxes[$shippingTax['taxClassId']] ?? 0; // ensure, $taxes[<int>] exists
+                if (!isset($taxes[$shippingTax['taxClassId']])) {
+                    $taxes[$shippingTax['taxClassId']] = 0;
+                }
                 $taxes[$shippingTax['taxClassId']] += $shippingTax['tax'];
             }
         }
@@ -474,7 +478,9 @@ class Cart
             foreach ($this->specials as $special) {
                 $specialTaxes = $special->getTaxes();
                 foreach ($specialTaxes as $specialTax) {
-                    $taxes[$specialTax['taxClassId']] = $taxes[$specialTax['taxClassId']] ?? 0; // ensure, $taxes[<int>] exists
+                    if (!isset($taxes[$specialTax['taxClassId']])) {
+                        $taxes[$specialTax['taxClassId']] = 0;
+                    }
                     $taxes[$specialTax['taxClassId']] += $specialTax['tax'];
                 }
             }
@@ -511,11 +517,17 @@ class Cart
 
         $serviceTaxes = $this->getServiceTaxes();
         foreach ($serviceTaxes as $taxClassId => $tax) {
+            if (!isset($taxes[$taxClassId])) {
+                $taxes[$taxClassId] = 0;
+            }
             $taxes[$taxClassId] += $tax;
         }
 
         $couponTaxes = $this->getCouponTaxes();
         foreach ($couponTaxes as $taxClassId => $tax) {
+            if (!isset($taxes[$taxClassId])) {
+                $taxes[$taxClassId] = 0;
+            }
             $taxes[$taxClassId] -= $tax;
         }
 
@@ -721,7 +733,7 @@ class Cart
      */
     public function getProductById($id)
     {
-        return $this->products[$id];
+        return $this->products[$id] ?? false;
     }
 
     /**
@@ -1063,14 +1075,20 @@ class Cart
         return true;
     }
 
-    public function removeProductById(string $productId): bool
+    /**
+     * @param string $product
+     *
+     * @return int
+     */
+    public function removeProductById(string $product): int
     {
-        if (!isset($this->products[$productId])) {
-            return false;
+        $product = $this->products[$product];
+        if ($product) {
+            $this->removeProduct($product);
+        } else {
+            return -1;
         }
 
-        $product = $this->products[$productId];
-        $this->removeProduct($product);
         $this->updateServiceAttributes();
 
         return true;
